@@ -66,6 +66,7 @@ class Ruleta {
    
             
             let monto = parseInt(prompt(`
+            BIENVENIDO A LA RULETA ONLINE!!!
             Ingrese el monto de la apuesta 
             SALDO ACTUAL: ${this.dineroUsuario}`));
             if (monto < 1 || monto > this.dineroUsuario || isNaN(monto)) {
