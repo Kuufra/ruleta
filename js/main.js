@@ -47,206 +47,244 @@ class Ruleta {
             new NumeroRuleta(34, "rojo", 1, "3"),
             new NumeroRuleta(35, "negro", 2, "3"),
             new NumeroRuleta(36, "rojo", 3, "3"),
-
         ];
-        this.dineroUsuario = 100;
-        this.ultimosNumerosGanadores = [];
-        
-    }
+        this.dineroUsuario = this.getDineroUsuario();
+        this.ultimosNumerosGanadores = this.getUltimosNumerosGanadores();
+        this.mostrarUltimosNumerosGanadores();
 
+        document.getElementById('saldo').innerText = `SALDO ACTUAL: ${this.dineroUsuario}`;
+        document.getElementById('realizar-apuesta').addEventListener('click', this.realizarApuesta.bind(this));
+        document.getElementById('confirmar-tipo').addEventListener('click', this.confirmarTipoApuesta.bind(this));
+        document.getElementById('jugar-nuevamente').addEventListener('click', this.resetGame.bind(this));
+    }
 
     realizarApuesta() {
-
-
-
-        while (this.dineroUsuario > 0) {
-            let numeroGanador = Math.floor(Math.random() * 37); // Calculamos el numero que va a salir en la ruleta
-            let infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
-            this.agregarUltimoNumeroGanador(numeroGanador);
-   
-            
-            let monto = parseInt(prompt(`
-            BIENVENIDO A LA RULETA ONLINE!!!
-            Ingrese el monto de la apuesta 
-            SALDO ACTUAL: ${this.dineroUsuario}`));
-            if (monto < 1 || monto > this.dineroUsuario || isNaN(monto)) {
-                alert("Monto de apuesta no permitido");
-                continue;
-            }
-
-            let tipoApuesta = prompt(`Seleccione el tipo de apuesta:
-            1. PLENO
-            2. COLOR
-            3. FILA
-            4. DOCENA
-            5. PAR o IMPAR`);
-
-            switch (tipoApuesta) {
-                case "1":
-                    let numeroApostado = parseInt(prompt("Seleccione el número al que desea apostar (0-36):"));
-                    if (numeroApostado < 0 || numeroApostado > 36 || isNaN(numeroApostado)) {
-                        alert("Número de apuesta no permitido");
-                        continue;
-                    }
-                    this.calcularPagoNumero(numeroGanador, numeroApostado, monto);
-                    break;
-                case "2":
-                    let colorElegido = prompt("Seleccione el color de la apuesta:\n1. Rojo\n2. Negro");
-                    if (colorElegido !== "1" && colorElegido !== "2") {
-                        alert("Color de apuesta no permitido");
-                        continue;
-                    }
-                    let color = (colorElegido === "1" ? "rojo" : "negro");
-                    this.calcularPagoColor(numeroGanador, color, monto);
-                    break;
-                case "3":
-                    let filaElegida = parseInt(prompt("Seleccione la fila de la apuesta (1, 2, o 3):"));
-                    if (filaElegida < 1 || filaElegida > 3 || isNaN(filaElegida)) {
-                        alert("Fila de apuesta no permitida");
-                        continue;
-                    }
-                    this.calcularPagoCalle(numeroGanador, filaElegida, monto);
-                    break;
-                case "4":
-                    let docenaElegida = parseInt(prompt("Seleccione la docena de la apuesta (1, 2, o 3):"));
-                    if (docenaElegida < 1 || docenaElegida > 3 || isNaN(docenaElegida)) {
-                        alert("Docena de apuesta no permitida");
-                        continue;
-                    }
-                    this.calcularPagoDocena(numeroGanador, docenaElegida, monto);
-                    break;
-                case "5":
-                    let parImpar = prompt("Seleccione par o impar:\n1. Par\n2. Impar");
-                    if (parImpar !== "1" && parImpar !== "2") {
-                        alert("Selección no válida");
-                        continue;
-                    }
-                    this.calcularPagoParImpar(numeroGanador, parImpar, monto);
-                    break;
-                default:
-                    alert("Tipo de apuesta no válido");
-            }
-            
-            this.mostrarNumeroGanador(infoNumeroGanador, numeroGanador);
-            this.mostrarUltimosNumerosGanadores();
-            this.mostrarDineroUsuario();
-            
-            if (this.dineroUsuario <= 0) {
-                alert("Lo siento, no tienes suficiente dinero para seguir apostando. ¡Hasta luego!");
-                break;
-            }
-
-            let continuar = confirm("¿Desea realizar otra apuesta?");
-            if (!continuar) {
-                break;
-            }
-        }
-
-    }
-
+        const monto = parseInt(document.getElementById('monto').value);
+        const mensajeError = document.getElementById('mensaje-error');
     
-    mostrarDineroUsuario() {
-        alert(`Dinero actual del usuario: ${this.dineroUsuario}`);
-    }
-    mostrarNumeroGanador(infoNumero, numeroGanador) {
-        alert(`
-        Número ganador: ${numeroGanador}, 
-        Color: ${infoNumero.color}, 
-        Calle: ${infoNumero.calle}, 
-        Docena: ${infoNumero.docena}`);
-    }
-
-    mostrarUltimosNumerosGanadores() {
-  
-        let ultimosNumeros = this.ultimosNumerosGanadores.join(', ');
-        alert(`Últimos números ganadores: ${ultimosNumeros}`);
-    }
-
-    agregarUltimoNumeroGanador(numero) {
-
-        this.ultimosNumerosGanadores.push(numero);
-        if (this.ultimosNumerosGanadores.length > 5) {
-            this.ultimosNumerosGanadores.shift();
+        if (monto < 1 || monto > this.dineroUsuario || isNaN(monto)) {
+            mensajeError.textContent = "Monto de apuesta no permitido";
+            mensajeError.style.display = 'block';
+            return;
         }
+    
+        this.montoApuesta = monto;
+        mensajeError.style.display = 'none';
+        document.getElementById('formulario-apuesta').style.display = 'none';
+        document.getElementById('tipo-apuesta').style.display = 'block';
     }
 
-    calcularPagoNumero(numeroGanador, numero, monto) {
+    confirmarTipoApuesta() {
+        const tipoApuesta = document.getElementById('tipo').value;
+        this.tipoApuesta = tipoApuesta;
 
-        let ganar = (numero === numeroGanador); 
-        if (ganar) {
-            let pago = monto * 36;
-            this.dineroUsuario += pago;
-            alert("Número ganador: " + numeroGanador + ". ¡Has ganado! Tu pago es: " + pago);
+        let additionalInputHtml = '';
+        switch (tipoApuesta) {
+            case "1":
+                additionalInputHtml = `
+                    <label for="numeroApostado">Seleccione el número al que desea apostar (0-36):</label>
+                    <input type="number" id="numeroApostado" min="0" max="36">
+                    <button id="confirmar-adicional">Confirmar Número</button>`;
+                break;
+            case "2":
+                additionalInputHtml = `
+                    <label for="colorElegido">Seleccione el color de la apuesta:</label>
+                    <select id="colorElegido">
+                        <option value="rojo">Rojo</option>
+                        <option value="negro">Negro</option>
+                    </select>
+                    <button id="confirmar-adicional">Confirmar Color</button>`;
+                break;
+            case "3":
+                additionalInputHtml = `
+                    <label for="filaElegida">Seleccione la fila de la apuesta (1, 2, o 3):</label>
+                    <input type="number" id="filaElegida" min="1" max="3">
+                    <button id="confirmar-adicional">Confirmar Fila</button>`;
+                break;
+            case "4":
+                additionalInputHtml = `
+                    <label for="docenaElegida">Seleccione la docena de la apuesta (1, 2, o 3):</label>
+                    <input type="number" id="docenaElegida" min="1" max="3">
+                    <button id="confirmar-adicional">Confirmar Docena</button>`;
+                break;
+            case "5":
+                additionalInputHtml = `
+                    <label for="parImpar">Seleccione par o impar:</label>
+                    <select id="parImpar">
+                        <option value="1">Par</option>
+                        <option value="2">Impar</option>
+                    </select>
+                    <button id="confirmar-adicional">Confirmar Par/Impar</button>`;
+                break;
+        }
+
+        document.getElementById('entrada-adicional').innerHTML = additionalInputHtml;
+        document.getElementById('entrada-adicional').style.display = 'block';
+        document.getElementById('confirmar-adicional').addEventListener('click', this.confirmarApuesta.bind(this));
+    }
+
+    confirmarApuesta() {
+        const numeroGanador = Math.floor(Math.random() * 37);
+        const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
+        this.agregarUltimoNumeroGanador(numeroGanador);
+
+        switch (this.tipoApuesta) {
+            case "1":
+                const numeroApostado = parseInt(document.getElementById('numeroApostado').value);
+                if (numeroApostado < 0 || numeroApostado > 36 || isNaN(numeroApostado)) {
+                    alert("Número de apuesta no permitido");
+                    return;
+                }
+                this.calcularPagoNumero(numeroGanador, numeroApostado, this.montoApuesta);
+                break;
+            case "2":
+                const colorElegido = document.getElementById('colorElegido').value;
+                this.calcularPagoColor(numeroGanador, colorElegido, this.montoApuesta);
+                break;
+            case "3":
+                const filaElegida = parseInt(document.getElementById('filaElegida').value);
+                if (filaElegida < 1 || filaElegida > 3 || isNaN(filaElegida)) {
+                    alert("Fila de apuesta no permitida");
+                    return;
+                }
+                this.calcularPagoCalle(numeroGanador, filaElegida, this.montoApuesta);
+                break;
+            case "4":
+                const docenaElegida = parseInt(document.getElementById('docenaElegida').value);
+                if (docenaElegida < 1 || docenaElegida > 3 || isNaN(docenaElegida)) {
+                    alert("Docena de apuesta no permitida");
+                    return;
+                }
+                this.calcularPagoDocena(numeroGanador, docenaElegida, this.montoApuesta);
+                break;
+            case "5":
+                const parImpar = document.getElementById('parImpar').value;
+                this.calcularPagoParImpar(numeroGanador, parImpar, this.montoApuesta);
+                break;
+        }
+
+        this.mostrarNumeroGanador(infoNumeroGanador, numeroGanador);
+        this.mostrarUltimosNumerosGanadores();
+        this.mostrarDineroUsuario();
+
+        if (this.dineroUsuario <= 0) {
+            document.getElementById('mensaje').innerText = "Lo siento, no tienes suficiente dinero para seguir apostando. ¡Hasta luego!";
+            document.getElementById('jugar-nuevamente').style.display = 'block';
         } else {
-            this.dineroUsuario -= monto;
-            alert("Número ganador: " + numeroGanador + ". Lo siento, has perdido.");
+            document.getElementById('formulario-apuesta').style.display = 'block';
+            document.getElementById('tipo-apuesta').style.display = 'none';
+            document.getElementById('entrada-adicional').style.display = 'none';
         }
     }
 
-    calcularPagoColor(numeroGanador, color, monto) {
-
-        let colorNumero = this.obtenerInformacionNumero(numeroGanador).color;
-        let ganar = (color === colorNumero);
-        if (ganar) {
-            let pago = monto * 2;
-            this.dineroUsuario += pago;
-            alert("Número ganador: " + numeroGanador + ". ¡Has ganado! Tu pago es: " + pago);
-        } else {
-            this.dineroUsuario -= monto;
-            alert("Número ganador: " + numeroGanador + ". Lo siento, has perdido.");
-        }
-    }
-
-    calcularPagoCalle(numeroGanador, calle, monto) {
-
-        let infoNumero = this.obtenerInformacionNumero(numeroGanador);
-        let ganar = (infoNumero.calle === calle);
-        if (ganar) {
-            let pago = monto * 2;
-            this.dineroUsuario += pago;
-            alert("Número ganador: " + numeroGanador + ". ¡Has ganado! Tu pago es: " + pago);
-        } else {
-            this.dineroUsuario -= monto;
-            alert("Número ganador: " + numeroGanador + ". Lo siento, has perdido.");
-        }
-    }
-
-    calcularPagoDocena(numeroGanador, docena, monto) {
-
-        let infoNumero = this.obtenerInformacionNumero(numeroGanador);
-        let ganar = (infoNumero.docena === docena);
-        if (ganar) {
-            let pago = monto * 2;
-            this.dineroUsuario += pago;
-            alert("Número ganador: " + numeroGanador + ". ¡Has ganado! Tu pago es: " + pago);
-        } else {
-            this.dineroUsuario -= monto;
-            alert("Número ganador: " + numeroGanador + ". Lo siento, has perdido.");
-        }
-    }
-
-    calcularPagoParImpar(numeroGanador, parImpar, monto) {
-
-        let esPar = numeroGanador % 2 === 0;
-
-        let ganar = ((parImpar === "1" && esPar) || (parImpar === "2" && !esPar));
-        if (ganar) {
-            let pago = monto * 2;
-            this.dineroUsuario += pago;
-            alert("Número ganador: " + numeroGanador + ". ¡Has ganado! Tu pago es: " + pago);
-        } else {
-            this.dineroUsuario -= monto;
-            alert("Número ganador: " + numeroGanador + ". Lo siento, has perdido.");
-        }
+    resetGame() {
+        this.dineroUsuario = 100;
+        this.ultimosNumerosGanadores = [];
+        this.saveData();
+        document.getElementById('mensaje').innerText = "";
+        document.getElementById('jugar-nuevamente').style.display = 'none';
+        document.getElementById('formulario-apuesta').style.display = 'block';
+        document.getElementById('tipo-apuesta').style.display = 'none';
+        document.getElementById('entrada-adicional').style.display = 'none';
+        this.mostrarDineroUsuario();
+        this.mostrarUltimosNumerosGanadores();
     }
 
     obtenerInformacionNumero(numero) {
-        let infoNumero = this.numerosRuleta.find(num => num.numero === numero);
-        return infoNumero;
+        return this.numerosRuleta.find(n => n.numero === numero);
+    }
+
+    agregarUltimoNumeroGanador(numero) {
+        this.ultimosNumerosGanadores.push(numero);
+        if (this.ultimosNumerosGanadores.length > 10) {
+            this.ultimosNumerosGanadores.shift();
+        }
+        this.saveData();
+    }
+
+    mostrarNumeroGanador(info, numero) {
+        const mensaje = `El número ganador es ${numero} (${info.color}, fila ${info.calle}, docena ${info.docena})`;
+        document.getElementById('mensaje').innerText = mensaje;
+    }
+
+    mostrarUltimosNumerosGanadores() {
+        const ultimosNumerosTexto = `Últimos números ganadores: ${this.ultimosNumerosGanadores.join(', ')}`;
+        document.getElementById('ultimos-numeros').innerText = ultimosNumerosTexto;
+    }
+
+    mostrarDineroUsuario() {
+        document.getElementById('saldo').innerText = `SALDO ACTUAL: ${this.dineroUsuario}`;
+    }
+
+    calcularPagoNumero(numeroGanador, numeroApostado, monto) {
+        if (numeroGanador === numeroApostado) {
+            this.dineroUsuario += monto * 35;
+        } else {
+            this.dineroUsuario -= monto;
+        }
+        this.saveData();
+    }
+
+    calcularPagoColor(numeroGanador, colorApostado, monto) {
+        const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
+        if (infoNumeroGanador.color === colorApostado) {
+            this.dineroUsuario += monto;
+        } else {
+            this.dineroUsuario -= monto;
+        }
+        this.saveData();
+    }
+
+    calcularPagoCalle(numeroGanador, calleApostada, monto) {
+        const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
+        if (infoNumeroGanador.calle === calleApostada) {
+            this.dineroUsuario += monto * 11;
+        } else {
+            this.dineroUsuario -= monto;
+        }
+        this.saveData();
+    }
+
+    calcularPagoDocena(numeroGanador, docenaApostada, monto) {
+        const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
+        if (infoNumeroGanador.docena === docenaApostada) {
+            this.dineroUsuario += monto * 2;
+        } else {
+            this.dineroUsuario -= monto;
+        }
+        this.saveData();
+    }
+
+    calcularPagoParImpar(numeroGanador, parImparApostado, monto) {
+        const esPar = numeroGanador % 2 === 0;
+        if ((esPar && parImparApostado === "1") || (!esPar && parImparApostado === "2")) {
+            this.dineroUsuario += monto;
+        } else {
+            this.dineroUsuario -= monto;
+        }
+        this.saveData();
+    }
+
+    saveData() {
+        const data = {
+            dineroUsuario: this.dineroUsuario,
+            ultimosNumerosGanadores: this.ultimosNumerosGanadores
+        };
+        localStorage.setItem('ruletaData', JSON.stringify(data));
+    }
+
+    getDineroUsuario() {
+        const data = JSON.parse(localStorage.getItem('ruletaData'));
+        return data ? data.dineroUsuario : 100;
+    }
+
+    getUltimosNumerosGanadores() {
+        const data = JSON.parse(localStorage.getItem('ruletaData'));
+        return data ? data.ultimosNumerosGanadores : [];
     }
 }
 
-
-let ruleta = new Ruleta();
-ruleta.realizarApuesta();
+document.addEventListener('DOMContentLoaded', () => {
+    new Ruleta();
+});
 
