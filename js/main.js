@@ -58,23 +58,47 @@ class Ruleta {
         document.getElementById('jugar-nuevamente').addEventListener('click', this.resetGame.bind(this));
     }
 
-    realizarApuesta() {
+    async realizarApuesta() {
         const monto = parseInt(document.getElementById('monto').value);
         const mensajeError = document.getElementById('mensaje-error');
-    
+
         if (monto < 1 || monto > this.dineroUsuario || isNaN(monto)) {
             mensajeError.textContent = "Monto de apuesta no permitido";
             mensajeError.style.display = 'block';
+            Toastify({
+                text: "Monto de apuesta no permitido",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "#FF6347",
+                    color: "#fff"
+                },
+            }).showToast();
             return;
         }
-    
+
         this.montoApuesta = monto;
         mensajeError.style.display = 'none';
         document.getElementById('formulario-apuesta').style.display = 'none';
         document.getElementById('tipo-apuesta').style.display = 'block';
+
+        Toastify({
+            text: `Estas apostando ${monto} USD
+                    Seleccione el tipo de apuesta a realizar`,
+            duration: 3000,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "#3498db",
+                color: "#fff"
+            },
+        }).showToast();
+
+        await this.simularLlamadaAsincrona();
     }
 
-    confirmarTipoApuesta() {
+    async confirmarTipoApuesta() {
         const tipoApuesta = document.getElementById('tipo').value;
         this.tipoApuesta = tipoApuesta;
 
@@ -123,10 +147,13 @@ class Ruleta {
         document.getElementById('confirmar-adicional').addEventListener('click', this.confirmarApuesta.bind(this));
     }
 
-    confirmarApuesta() {
+    async confirmarApuesta() {
         const numeroGanador = Math.floor(Math.random() * 37);
         const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
         this.agregarUltimoNumeroGanador(numeroGanador);
+        this.procesarApuesta();
+
+        await this.simularLlamadaAsincrona();
 
         switch (this.tipoApuesta) {
             case "1":
@@ -163,9 +190,21 @@ class Ruleta {
                 break;
         }
 
+
         this.mostrarNumeroGanador(infoNumeroGanador, numeroGanador);
         this.mostrarUltimosNumerosGanadores();
         this.mostrarDineroUsuario();
+
+        Toastify({
+            text: `El número ganador es ${numeroGanador}`,
+            duration: 2000,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "#4CAF50",
+                color: "#fff"
+            },
+        }).showToast();
 
         if (this.dineroUsuario <= 0) {
             document.getElementById('mensaje').innerText = "Lo siento, no tienes suficiente dinero para seguir apostando. ¡Hasta luego!";
@@ -174,7 +213,36 @@ class Ruleta {
             document.getElementById('formulario-apuesta').style.display = 'block';
             document.getElementById('tipo-apuesta').style.display = 'none';
             document.getElementById('entrada-adicional').style.display = 'none';
+
         }
+
+    }
+
+    async procesarApuesta() {
+
+        Toastify({
+            text: `NO VA MAS!!!
+                    Se cerraron las apuestas` ,
+            duration: 1000,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "#FF6347" , 
+                color: "#fff"
+            },
+            stopOnFocus: true,
+        }).showToast();
+
+
+        await this.simularLlamadaAsincrona();
+    }
+
+    simularLlamadaAsincrona() {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve();
+            }, 2000);
+        });
     }
 
     resetGame() {
@@ -211,6 +279,7 @@ class Ruleta {
         const ultimosNumerosTexto = `Últimos números ganadores: ${this.ultimosNumerosGanadores.join(', ')}`;
         document.getElementById('ultimos-numeros').innerText = ultimosNumerosTexto;
     }
+
 
     mostrarDineroUsuario() {
         document.getElementById('saldo').innerText = `SALDO ACTUAL: ${this.dineroUsuario}`;
