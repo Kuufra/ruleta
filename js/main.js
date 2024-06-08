@@ -9,53 +9,51 @@ class NumeroRuleta {
 
 class Ruleta {
     constructor() {
-        this.numerosRuleta = [
-            new NumeroRuleta(0, "verde", null, null),
-            new NumeroRuleta(1, "rojo", 1, "1"),
-            new NumeroRuleta(2, "negro", 2, "1"),
-            new NumeroRuleta(3, "rojo", 3, "1"),
-            new NumeroRuleta(4, "negro", 1, "1"),
-            new NumeroRuleta(5, "rojo", 2, "1"),
-            new NumeroRuleta(6, "negro", 3, "1"),
-            new NumeroRuleta(7, "rojo", 1, "1"),
-            new NumeroRuleta(8, "negro", 2, "1"),
-            new NumeroRuleta(9, "rojo", 3, "1"),
-            new NumeroRuleta(10, "negro", 1, "1"),
-            new NumeroRuleta(11, "negro", 2, "1"),
-            new NumeroRuleta(12, "rojo", 3, "1"),
-            new NumeroRuleta(13, "negro", 1, "2"),
-            new NumeroRuleta(14, "rojo", 2, "2"),
-            new NumeroRuleta(15, "negro", 3, "2"),
-            new NumeroRuleta(16, "rojo", 1, "2"),
-            new NumeroRuleta(17, "negro", 2, "2"),
-            new NumeroRuleta(18, "rojo", 3, "2"),
-            new NumeroRuleta(19, "rojo", 1, "2"),
-            new NumeroRuleta(20, "negro", 2, "2"),
-            new NumeroRuleta(21, "rojo", 3, "2"),
-            new NumeroRuleta(22, "negro", 1, "2"),
-            new NumeroRuleta(23, "rojo", 2, "2"),
-            new NumeroRuleta(24, "negro", 3, "2"),
-            new NumeroRuleta(25, "rojo", 1, "3"),
-            new NumeroRuleta(26, "negro", 2, "3"),
-            new NumeroRuleta(27, "rojo", 3, "3"),
-            new NumeroRuleta(28, "negro", 1, "3"),
-            new NumeroRuleta(29, "negro", 2, "3"),
-            new NumeroRuleta(30, "rojo", 3, "3"),
-            new NumeroRuleta(31, "negro", 1, "3"),
-            new NumeroRuleta(32, "rojo", 2, "3"),
-            new NumeroRuleta(33, "negro", 3, "3"),
-            new NumeroRuleta(34, "rojo", 1, "3"),
-            new NumeroRuleta(35, "negro", 2, "3"),
-            new NumeroRuleta(36, "rojo", 3, "3"),
-        ];
+        this.numerosRuleta = [];
         this.dineroUsuario = this.getDineroUsuario();
         this.ultimosNumerosGanadores = this.getUltimosNumerosGanadores();
-        this.mostrarUltimosNumerosGanadores();
 
+        this.cargarDatos();
+    }
+
+    cargarDatos() {
+        fetch('js/ruleta.json')
+            .then(response => response.json())
+            .then(data => {
+                this.numerosRuleta = data.numerosRuleta.map(num => new NumeroRuleta(num.numero, num.color, num.calle, num.docena));
+                this.inicializarJuego();
+            })
+            .catch(error => console.error('Error al cargar los datos de la ruleta:', error));
+    }
+
+    inicializarJuego() {
         document.getElementById('saldo').innerText = `SALDO ACTUAL: ${this.dineroUsuario}`;
         document.getElementById('realizar-apuesta').addEventListener('click', this.realizarApuesta.bind(this));
         document.getElementById('confirmar-tipo').addEventListener('click', this.confirmarTipoApuesta.bind(this));
         document.getElementById('jugar-nuevamente').addEventListener('click', this.resetGame.bind(this));
+        this.mostrarUltimosNumerosGanadores();
+    }
+
+    getDineroUsuario() {
+        const data = JSON.parse(localStorage.getItem('ruletaData'));
+        return data ? data.dineroUsuario : 100;
+    }
+
+    getUltimosNumerosGanadores() {
+        const data = JSON.parse(localStorage.getItem('ruletaData'));
+        return data ? data.ultimosNumerosGanadores : [];
+    }
+
+    setDineroUsuario(monto) {
+        this.dineroUsuario = monto;
+        this.saveData();
+        document.getElementById('saldo').innerText = `SALDO ACTUAL: ${this.dineroUsuario}`;
+    }
+
+    setUltimosNumerosGanadores(numeros) {
+        this.ultimosNumerosGanadores = numeros;
+        this.saveData();
+        document.getElementById('ultimos-numeros').innerText = `Últimos números ganadores: ${this.ultimosNumerosGanadores.join(', ')}`;
     }
 
     async realizarApuesta() {
@@ -84,9 +82,8 @@ class Ruleta {
         document.getElementById('tipo-apuesta').style.display = 'block';
 
         Toastify({
-            text: `Estas apostando ${monto} USD
-                    Seleccione el tipo de apuesta a realizar`,
-            duration: 3000,
+            text: `Estas apostando ${monto} USD. Seleccione el tipo de apuesta a realizar`,
+            duration: 1000,
             gravity: "top",
             position: "center",
             style: {
@@ -190,7 +187,6 @@ class Ruleta {
                 break;
         }
 
-
         this.mostrarNumeroGanador(infoNumeroGanador, numeroGanador);
         this.mostrarUltimosNumerosGanadores();
         this.mostrarDineroUsuario();
@@ -213,11 +209,8 @@ class Ruleta {
             document.getElementById('formulario-apuesta').style.display = 'block';
             document.getElementById('tipo-apuesta').style.display = 'none';
             document.getElementById('entrada-adicional').style.display = 'none';
-
         }
-
     }
-
     async procesarApuesta() {
 
         Toastify({
@@ -237,101 +230,134 @@ class Ruleta {
         await this.simularLlamadaAsincrona();
     }
 
-    simularLlamadaAsincrona() {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve();
-            }, 2000);
-        });
-    }
-
-    resetGame() {
-        this.dineroUsuario = 100;
-        this.ultimosNumerosGanadores = [];
-        this.saveData();
-        document.getElementById('mensaje').innerText = "";
-        document.getElementById('jugar-nuevamente').style.display = 'none';
-        document.getElementById('formulario-apuesta').style.display = 'block';
-        document.getElementById('tipo-apuesta').style.display = 'none';
-        document.getElementById('entrada-adicional').style.display = 'none';
-        this.mostrarDineroUsuario();
-        this.mostrarUltimosNumerosGanadores();
-    }
-
     obtenerInformacionNumero(numero) {
         return this.numerosRuleta.find(n => n.numero === numero);
     }
 
     agregarUltimoNumeroGanador(numero) {
-        this.ultimosNumerosGanadores.push(numero);
-        if (this.ultimosNumerosGanadores.length > 10) {
-            this.ultimosNumerosGanadores.shift();
+        if (this.ultimosNumerosGanadores.length >= 10) {
+            this.ultimosNumerosGanadores.pop();
         }
-        this.saveData();
-    }
-
-    mostrarNumeroGanador(info, numero) {
-        const mensaje = `El número ganador es ${numero} (${info.color}, fila ${info.calle}, docena ${info.docena})`;
-        document.getElementById('mensaje').innerText = mensaje;
+        this.ultimosNumerosGanadores.unshift(numero);
+        this.setUltimosNumerosGanadores(this.ultimosNumerosGanadores);
     }
 
     mostrarUltimosNumerosGanadores() {
-        const ultimosNumerosTexto = `Últimos números ganadores: ${this.ultimosNumerosGanadores.join(', ')}`;
-        document.getElementById('ultimos-numeros').innerText = ultimosNumerosTexto;
+        document.getElementById('ultimos-numeros').innerText = `Últimos números ganadores: ${this.ultimosNumerosGanadores.join(', ')}`;
     }
 
+    mostrarNumeroGanador(infoNumeroGanador, numeroGanador) {
+        const mensaje = `El número ganador es ${numeroGanador} (${infoNumeroGanador.color}, Calle ${infoNumeroGanador.calle}, Docena ${infoNumeroGanador.docena})`;
+        document.getElementById('mensaje').innerText = mensaje;
+    }
 
     mostrarDineroUsuario() {
         document.getElementById('saldo').innerText = `SALDO ACTUAL: ${this.dineroUsuario}`;
     }
 
-    calcularPagoNumero(numeroGanador, numeroApostado, monto) {
+    simularLlamadaAsincrona() {
+        return new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    calcularPagoNumero(numeroGanador, numeroApostado, montoApuesta) {
         if (numeroGanador === numeroApostado) {
-            this.dineroUsuario += monto * 35;
+            this.dineroUsuario += montoApuesta * 36;
+            Toastify({
+                text: `¡Ganaste ${montoApuesta * 36} USD!`,
+                duration: 2000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "#4CAF50",
+                    color: "#fff"
+                },
+            }).showToast();
         } else {
-            this.dineroUsuario -= monto;
+            this.dineroUsuario -= montoApuesta;
         }
-        this.saveData();
+        this.setDineroUsuario(this.dineroUsuario);
     }
 
-    calcularPagoColor(numeroGanador, colorApostado, monto) {
+    calcularPagoColor(numeroGanador, colorElegido, montoApuesta) {
         const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
-        if (infoNumeroGanador.color === colorApostado) {
-            this.dineroUsuario += monto;
+        if (infoNumeroGanador.color === colorElegido) {
+            this.dineroUsuario += montoApuesta * 2;
+            Toastify({
+                text: `¡Ganaste ${montoApuesta * 2} USD!`,
+                duration: 2000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "#4CAF50",
+                    color: "#fff"
+                },
+            }).showToast();
         } else {
-            this.dineroUsuario -= monto;
+            this.dineroUsuario -= montoApuesta;
         }
-        this.saveData();
+        this.setDineroUsuario(this.dineroUsuario);
     }
 
-    calcularPagoCalle(numeroGanador, calleApostada, monto) {
+    calcularPagoCalle(numeroGanador, filaElegida, montoApuesta) {
         const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
-        if (infoNumeroGanador.calle === calleApostada) {
-            this.dineroUsuario += monto * 11;
+        if (infoNumeroGanador.calle === filaElegida) {
+            this.dineroUsuario += montoApuesta * 3;
+            Toastify({
+                text: `¡Ganaste ${montoApuesta * 3} USD!`,
+                duration: 2000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "#4CAF50",
+                    color: "#fff"
+                },
+            }).showToast();
         } else {
-            this.dineroUsuario -= monto;
+            this.dineroUsuario -= montoApuesta;
         }
-        this.saveData();
+        this.setDineroUsuario(this.dineroUsuario);
     }
 
-    calcularPagoDocena(numeroGanador, docenaApostada, monto) {
+    calcularPagoDocena(numeroGanador, docenaElegida, montoApuesta) {
         const infoNumeroGanador = this.obtenerInformacionNumero(numeroGanador);
-        if (infoNumeroGanador.docena === docenaApostada) {
-            this.dineroUsuario += monto * 2;
+        if (infoNumeroGanador.docena === docenaElegida) {
+            this.dineroUsuario += montoApuesta * 3;
+            Toastify({
+                text: `¡Ganaste ${montoApuesta * 3} USD!`,
+                duration: 2000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "#4CAF50",
+                    color: "#fff"
+                },
+            }).showToast();
         } else {
-            this.dineroUsuario -= monto;
+            this.dineroUsuario -= montoApuesta;
         }
-        this.saveData();
+        this.setDineroUsuario(this.dineroUsuario);
     }
 
-    calcularPagoParImpar(numeroGanador, parImparApostado, monto) {
+    calcularPagoParImpar(numeroGanador, parImpar, montoApuesta) {
         const esPar = numeroGanador % 2 === 0;
-        if ((esPar && parImparApostado === "1") || (!esPar && parImparApostado === "2")) {
-            this.dineroUsuario += monto;
+        const esApuestaPar = parImpar === "1";
+
+        if ((esPar && esApuestaPar) || (!esPar && !esApuestaPar)) {
+            this.dineroUsuario += montoApuesta * 2;
+            Toastify({
+                text: `¡Ganaste ${montoApuesta * 2} USD!`,
+                duration: 2000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: "#4CAF50",
+                    color: "#fff"
+                },
+            }).showToast();
         } else {
-            this.dineroUsuario -= monto;
+            this.dineroUsuario -= montoApuesta;
         }
-        this.saveData();
+        this.setDineroUsuario(this.dineroUsuario);
     }
 
     saveData() {
@@ -342,18 +368,18 @@ class Ruleta {
         localStorage.setItem('ruletaData', JSON.stringify(data));
     }
 
-    getDineroUsuario() {
-        const data = JSON.parse(localStorage.getItem('ruletaData'));
-        return data ? data.dineroUsuario : 100;
-    }
-
-    getUltimosNumerosGanadores() {
-        const data = JSON.parse(localStorage.getItem('ruletaData'));
-        return data ? data.ultimosNumerosGanadores : [];
+    resetGame() {
+        this.dineroUsuario = 100;
+        this.ultimosNumerosGanadores = [];
+        this.saveData();
+        document.getElementById('mensaje').innerText = "";
+        document.getElementById('jugar-nuevamente').style.display = 'none';
+        this.inicializarJuego();
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new Ruleta();
+    const ruleta = new Ruleta();
 });
+
 
